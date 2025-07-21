@@ -1,31 +1,35 @@
-# render.yaml - Configuración optimizada para Laravel + PostgreSQL en Render
+# Render Configuration - Laravel + PostgreSQL (Optimizado)
 services:
-  # Servicio principal (Aplicación Laravel)
+  # Servicio Web (Aplicación Laravel)
   - type: web
     name: parqueo-canoto
     runtime: php
-    plan: free
+    plan: free  # Para producción, considera 'starter' o superior
+    region: oregon  # Usa la misma región que tu base de datos
+    
     buildCommand: |
-      # Instalación y optimización
+      # Instalación de dependencias
       composer install --no-dev --optimize-autoloader
       
-      # Configuración de Laravel
+      # Configuración inicial
       php artisan key:generate --force
       php artisan storage:link
       
-      # Migraciones y seeds (¡Opcional! Elimina --seed si no lo necesitas)
-      php artisan migrate --force --seed
+      # Base de datos (migraciones y seeds)
+      php artisan migrate --force
+      # php artisan db:seed --force  # Descomenta si necesitas datos iniciales
       
-      # Cache para mejor rendimiento
+      # Optimización
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
       
-      # Permisos para storage (necesario para Laravel)
+      # Permisos
       chmod -R 775 storage bootstrap/cache
 
-    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
+      # Configuración básica de Laravel
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
@@ -35,10 +39,8 @@ services:
           type: web
           name: parqueo-canoto
           property: url
-      - key: LOG_CHANNEL
-        value: stderr
       
-      # Configuración automática de PostgreSQL
+      # Conexión a PostgreSQL (Render maneja automáticamente las credenciales)
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -47,7 +49,7 @@ services:
           name: parqueo-canoto-db
           property: host
       - key: DB_PORT
-        value: 5432
+        value: 5432  # Puerto corregido
       - key: DB_DATABASE
         fromService:
           type: pserv
@@ -64,19 +66,27 @@ services:
           name: parqueo-canoto-db
           property: password
       
-      # Configuración de sesiones (usando PostgreSQL)
+      # Sesiones y caché (usando PostgreSQL)
       - key: SESSION_DRIVER
         value: database
-      - key: SESSION_LIFETIME
-        value: "120"
+      - key: CACHE_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # Logs (mejores prácticas para Render)
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: debug
 
   # Base de datos PostgreSQL
   - type: pserv
     name: parqueo-canoto-db
     engine: postgres
-    plan: free
-    # Para entornos de producción, recomiendo cambiar a:
-    # plan: starter
-    # disk:
+    plan: free  # ¡Actualiza a 'starter' para evitar pérdida de datos!
+    region: oregon  # Misma región que el servicio web
+    # disk:  # Descomenta en planes pagos
     #   name: pgdata
+    #   mountPath: /var/lib/postgresql/data
     #   sizeGB: 10
