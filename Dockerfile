@@ -1,7 +1,7 @@
 # Paso 1: Usamos la imagen oficial de PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Paso 2: Instalamos las dependencias del sistema Y las extensiones de PHP que Laravel necesita
+# Paso 2: Instalamos las dependencias y extensiones de PHP que Laravel necesita
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -47,3 +47,22 @@ RUN php artisan key:generate
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
+
+# Paso 10: Exponemos el puerto que Zeabur nos dará
+EXPOSE 8080
+
+# Paso 11: ¡LA LÍNEA DE LA VICTORIA! Iniciamos Laravel en el puerto que Zeabur nos asigne.
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+```**El Cambio Clave:**
+*   Hemos reemplazado la última línea `CMD ["php", "artisan", "serve"...]` para que use el puerto `8080`, que es el que Zeabur usa por defecto. También hemos añadido `EXPOSE 8080` que es una buena práctica.
+
+---
+
+#### **Paso 2: Sube la Versión Victoriosa a GitHub**
+
+**Acción:**
+En tu terminal, ejecuta los tres comandos de siempre:
+```bash
+git add Dockerfile
+git commit -m "Ajustar puerto de servicio para Zeabur"
+git push origin main
