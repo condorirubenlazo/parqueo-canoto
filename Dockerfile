@@ -1,68 +1,29 @@
-# Paso 1: Usamos la imagen oficial de PHP 8.2 con Apache
+# Paso 1: Usamos la imagen oficial de PHP 8.2 con Apache, que es universalmente compatible
 FROM php:8.2-apache
 
-# Paso 2: Instalamos las dependencias y extensiones de PHP que Laravel necesita
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
-    libpq-dev \
-    && docker-php-ext-install \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    opcache \
-    xml
+# Paso 2: Instalamos las herramientas básicas y las extensiones de PHP para Laravel y Postgres
+RUN apt-get update && apt-get install -y git unzip zip libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
 
-# Paso 3: Instalamos Composer (el gestor de paquetes de PHP)
+# Paso 3: Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Paso 4: Establecemos el directorio de trabajo
 WORKDIR /var/www/html
 
-# Paso 5: Copiamos los archivos de nuestra aplicación
+# Paso 5: Copiamos el código de la aplicación
 COPY . .
 
 # Paso 6: Instalamos las dependencias de Laravel
-RUN composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader
 
-# Paso 7: Ajustamos permisos
-RUN chown -R www-data:www-data storage bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
-
-# Paso 8: Copiamos el .env y generamos la clave
+# Paso 7: Preparamos el archivo .env y generamos la clave
 RUN cp .env.example .env
 RUN php artisan key:generate
 
-# Paso 9: Limpiamos cachés para producción
+# Paso 8: Limpiamos cachés para producción
 RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
 
-# Paso 10: Exponemos el puerto que Zeabur nos dará
-EXPOSE 8080
-
-# Paso 11: ¡LA LÍNEA DE LA VICTORIA! Iniciamos Laravel en el puerto que Zeabur nos asigne.
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
-```**El Cambio Clave:**
-*   Hemos reemplazado la última línea `CMD ["php", "artisan", "serve"...]` para que use el puerto `8080`, que es el que Zeabur usa por defecto. También hemos añadido `EXPOSE 8080` que es una buena práctica.
-
----
-
-#### **Paso 2: Sube la Versión Victoriosa a GitHub**
-
-**Acción:**
-En tu terminal, ejecuta los tres comandos de siempre:
-```bash
-git add Dockerfile
-git commit -m "Ajustar puerto de servicio para Zeabur"
-git push origin main
+# Paso 9: ¡EL COMANDO DE LA VICTORIA!
+# Iniciamos el servidor en el puerto que Zeabur nos asigne a través de la variable $PORT
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
