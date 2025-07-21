@@ -2,7 +2,7 @@ services:
   # 1. Servicio Web para nuestra aplicación Laravel
   - type: web
     name: parqueo-canoto
-    runtime: php         # CORRECCIÓN: La clave correcta es 'runtime', no 'env'.
+    runtime: php
     plan: free
     buildCommand: |
       composer install --no-dev --optimize-autoloader
@@ -13,7 +13,7 @@ services:
     startCommand: php artisan serve --host 0.0.0.0 --port 10000
 
   # 2. Base de Datos Postgres
-  - type: db            # CORRECCIÓN: El tipo de servicio es 'db', no 'pserv'.
+  - type: pserv         # CORRECCIÓN DEFINITIVA: El tipo es 'pserv' (Private Service)
     name: parqueo-canoto-db
-    engine: postgres    # CORRECCIÓN: Se especifica el 'engine', no el 'runtime'.
+    engine: postgres    # Y se especifica el 'engine' (motor)
     plan: free
