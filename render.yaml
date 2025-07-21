@@ -1,5 +1,10 @@
+databases:
+  - name: parqueo-canoto-db
+    databaseName: parqueo_canoto_db
+    user: parqueo_user
+    plan: free
+
 services:
-  # 1. Servicio Web para nuestra aplicación Laravel
   - type: web
     name: parqueo-canoto
     runtime: php
@@ -10,9 +15,39 @@ services:
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
-    startCommand: php artisan serve --host 0.0.0.0 --port 10000
-
-  # 2. Base de Datos Postgres
-  - type: pserv
-    name: parqueo-canoto-db
-    plan: free
+    startCommand: php artisan serve --host 0.0.0.0 --port ${{ secrets.PORT }}
+    envVars:
+      - key: APP_URL
+        fromService:
+          type: web
+          name: parqueo-canoto
+          property: url
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: parqueo-canoto-db
+          property: host
+      - key: DB_PORT
+        fromService:
+          type: pserv
+          name: parqueo-canoto-db
+          property: port
+      - key: DB_DATABASE
+        fromService:
+          type: pserv
+          name: parqueo-canoto-db
+          property: database
+      - key: DB_USERNAME
+        fromService:
+          type: pserv
+          name: parqueo-canoto-db
+          property: user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: parqueo-canoto-db
+          property: password
