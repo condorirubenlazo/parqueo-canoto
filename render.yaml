@@ -13,7 +13,6 @@ services:
     startCommand: php artisan serve --host 0.0.0.0 --port 10000
 
   # 2. Base de Datos Postgres
-  - type: pserv         # CORRECCIÓN DEFINITIVA: El tipo es 'pserv' (Private Service)
+  - type: pserv
     name: parqueo-canoto-db
-    engine: postgres    # Y se especifica el 'engine' (motor)
     plan: free
