@@ -1,26 +1,44 @@
-# Esta es la plantilla oficial de Render para un proyecto Laravel.
-
+# render.yaml - Configuración optimizada para Laravel + PostgreSQL en Render
 services:
-  # Servicio Web (Tu aplicación Laravel)
+  # Servicio principal (Aplicación Laravel)
   - type: web
     name: parqueo-canoto
     runtime: php
     plan: free
     buildCommand: |
+      # Instalación y optimización
       composer install --no-dev --optimize-autoloader
+      
+      # Configuración de Laravel
       php artisan key:generate --force
+      php artisan storage:link
+      
+      # Migraciones y seeds (¡Opcional! Elimina --seed si no lo necesitas)
+      php artisan migrate --force --seed
+      
+      # Cache para mejor rendimiento
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
-    startCommand: php artisan serve --host 0.0.0.0 --port ${{ secrets.PORT }}
+      
+      # Permisos para storage (necesario para Laravel)
+      chmod -R 775 storage bootstrap/cache
+
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
     envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
       - key: APP_URL
         fromService:
           type: web
           name: parqueo-canoto
           property: url
-      - key: APP_KEY
-        generateValue: true # Render generará una clave segura automáticamente
+      - key: LOG_CHANNEL
+        value: stderr
+      
+      # Configuración automática de PostgreSQL
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -29,10 +47,7 @@ services:
           name: parqueo-canoto-db
           property: host
       - key: DB_PORT
-        fromService:
-          type: pserv
-          name: parqueo-canoto-db
-          property: port
+        value: 5432
       - key: DB_DATABASE
         fromService:
           type: pserv
@@ -48,9 +63,20 @@ services:
           type: pserv
           name: parqueo-canoto-db
           property: password
+      
+      # Configuración de sesiones (usando PostgreSQL)
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: "120"
 
-  # Base de Datos (Postgres)
+  # Base de datos PostgreSQL
   - type: pserv
     name: parqueo-canoto-db
     engine: postgres
     plan: free
+    # Para entornos de producción, recomiendo cambiar a:
+    # plan: starter
+    # disk:
+    #   name: pgdata
+    #   sizeGB: 10
