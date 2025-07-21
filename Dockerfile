@@ -12,7 +12,7 @@ RUN composer install --no-interaction --no-dev --prefer-dist --optimize-autoload
 COPY . .
 
 # CORRECCIÓN DE PERMISOS DEFINITIVA:
-# En lugar de 'chown', usamos 'chmod' para dar permisos de escritura. Esto es compatible con Render.
+# Usamos 'chmod' para dar permisos de escritura. Esto es compatible con Render.
 RUN chmod -R 775 storage bootstrap/cache
 
 # Copiamos el .env y generamos la clave
