@@ -1,7 +1,7 @@
 # Paso 1: Usamos la imagen oficial de PHP 8.2 con Apache
 FROM php:8.2-apache
 
-# Paso 2: Instalamos las dependencias y extensiones de PHP que Laravel necesita
+# Paso 2: Instalamos las dependencias del sistema Y las extensiones de PHP que Laravel necesita
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
     && docker-php-ext-install \
     pdo_mysql \
     pdo_pgsql \
