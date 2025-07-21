@@ -1,25 +1,48 @@
-# Usamos una imagen moderna optimizada para Laravel
-FROM aiiro/laravel-base:8.2-apache
+# Paso 1: Usamos la imagen oficial de PHP 8.2 con Apache
+FROM php:8.2-apache
 
-# Establecemos el directorio de trabajo
+# Paso 2: Instalamos las dependencias y extensiones de PHP que Laravel necesita
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    zip \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    && docker-php-ext-install \
+    pdo_mysql \
+    pdo_pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    opcache \
+    xml
+
+# Paso 3: Instalamos Composer (el gestor de paquetes de PHP)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Paso 4: Establecemos el directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiamos primero los archivos de dependencias para optimizar la construcción
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
-
-# Ahora copiamos el resto del código de la aplicación
+# Paso 5: Copiamos los archivos de nuestra aplicación
 COPY . .
 
-# CORRECCIÓN DE PERMISOS DEFINITIVA:
-# Usamos 'chmod' para dar permisos de escritura. Esto es compatible con Render.
+# Paso 6: Instalamos las dependencias de Laravel
+RUN composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
+
+# Paso 7: Ajustamos permisos
+RUN chown -R www-data:www-data storage bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
 
-# Copiamos el .env y generamos la clave
+# Paso 8: Copiamos el .env y generamos la clave
 RUN cp .env.example .env
 RUN php artisan key:generate
 
-# Limpiamos cachés para producción
+# Paso 9: Limpiamos cachés para producción
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
